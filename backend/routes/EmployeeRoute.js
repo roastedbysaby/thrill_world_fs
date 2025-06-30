@@ -5,13 +5,13 @@ import { validateEmployeeData } from '../middlewares/validateEmployeeData.js';
 
 const router = express.Router();
 
-router.post('/employees', validateEmployeeData(false), createEmployee);
+router.post('/employees', validateEmployeeData, createEmployee);
 
 router.get('/employees', getAllEmployees);
 
 router.get('/employees/:id', findEmployeeId, getSingleEmployee);
 
-router.put('/employees/:id', findEmployeeId, validateEmployeeData(true), updateEmployee);
+router.put('/employees/:id', findEmployeeId, validateEmployeeData, updateEmployee);
 
 router.delete('/employees/:id', findEmployeeId, deleteEmployee);
 

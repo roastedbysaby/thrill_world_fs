@@ -1,58 +1,67 @@
-import { Ride, rides } from '../models/Ride.js';
+import { Ride } from '../models/Ride.js';
 
 export const createRide = async (req, res) =>{
     try{
-        const newId = rides.length > 0 ? Math.max(...rides.map(r => r.id)) + 1 : 1;
-        const newRide = new Ride (newId, req.validatedRideBody);
+        const newRide = await Ride.create(req.validatedRideBody);
 
-        rides.push(newRide);
-        res.status(201).json({ message: `Ride ${newRide.name} added.` });
-    } catch (error) {
-        console.error('Error creating ride.');
+        res.status(201).json({
+            message: `Ride ${newRide.name} added.`,
+            ride: newRide
+        });
+    } catch(error) {
+        console.error('Error adding ride.');
         res.status(500).json({ error: 'Couldnt add ride.' });
     };
 };
 
-export const getAllRides = (req, res) =>{
+export const getAllRides = async (req, res) =>{
     try {
+        const rides = await Ride.find();
         res.status(200).json(rides);
     } catch(error) {
-        console.error('Error fetching rides.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving all rides.');
+        res.status(500).json({ message: 'Error retrieving all rides.' });
     };
 };
 
-export const getSingleRide = async (req, res) =>{
+export const getSingleRide = (req, res) =>{
     try {
         res.status(200).json(req.ride);
     } catch(error) {
-        console.error('Error fetching the ride.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving the ride.');
+        res.status(500).json({ message: 'Error retrieving the ride.' });
     }; 
 };
 
-export const updateRide = async (req, res) =>{
+export const updateRide = async (req, res, next) =>{
     try {
-        const rideIndex = rides.findIndex(r => r.id === req.ride.id);
+        const updatedRide = await Ride.findByIdAndUpdate(
+            req.params.id,
+            req.validatedRideBody,
+            { 
+                new: true,
+                runValidators: true,
+                overwrite: true
+            }
+        );
 
-        rides[rideIndex] = new Ride(req.ride.id, req.validatedRideBody);
-        res.status(200).json(rides[rideIndex]);
-
+        console.log('Ride updated.');
+        res.status(200).json(updatedRide);
     } catch(error) {
         console.error('Error updating ride.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error occurred.' });
     };
 };
 
-export const deleteRide = async (req, res) =>{
+export const deleteRide = async (req, res, next) =>{
     try {
-        const rideIndex = rides.findIndex(r => r.id === req.ride.id);
-        
-        rides.splice(rideIndex, 1);
+        const rideToDelete = await Ride.findByIdAndDelete(req.params.id);
         res.status(204).send();
         console.log('Ride deleted.');
     } catch(error) {
         console.error('Error deleting ride.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error occurred.' });
     };
 };

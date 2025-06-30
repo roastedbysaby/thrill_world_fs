@@ -1,37 +1,50 @@
-import { employees } from '../models/Employee.js';
+import mongoose from 'mongoose';
+import { Employee } from '../models/Employee.js';
 
-export const validateEmployeeData = (isUpdate = false) =>{
-    return (req, res, next) =>{
-        try {
-            const { name, position, department } = req.body;
-            const nameTrim = name? name.trim() : '';
-            const positionTrim = position? position.trim() : '';
-            const departmentTrim = department? department.trim() : '';
-    
-            if (!nameTrim ||
-                !positionTrim ||
-                !departmentTrim){
-                    return res.status(400).json({ message: 'Invalid fields.' });
-                };
-    
-            if (!isUpdate){
-                const exists = employees.find(e => e.name.toLowerCase() === nameTrim.toLowerCase());
-                if (exists) return res.status(409).json({ message: `${nameTrim} already exists.` });
-            } else {
-                const existingRename = employees.find(e => e.name.toLowerCase() === nameTrim.toLowerCase() && e.id !== req.employee.id);
-                if (existingRename) return res.status(409).json({ message: `${nameTrim} already exists.` });
+export const validateEmployeeData = async (req, res, next) =>{
+    try {
+        const { name, position, department } = req.body;
+        const nameTrim = name? name.trim() : '';
+        const positionTrim = position? position.trim() : '';
+        const departmentTrim = department? department.trim() : '';
+        const isUpdate = req.method === 'PUT';
+
+        if (!nameTrim ||
+            !positionTrim ||
+            !departmentTrim){
+                return res.status(400).json({ message: 'Invalid fields.' });
             };
-    
-            req.validatedEmployeeBody = {
-                name: nameTrim,
-                position: positionTrim,
-                department: departmentTrim
-            };
-            next();
+
+        if (!isUpdate){
+            const exists = await Employee.findOne({
+                name: { $regex: new RegExp(`^${nameTrim}$`, 'i') }
+            });
+
+            if (exists) return res.status(409).json({ message: `${nameTrim} already exists.` });
             
-        } catch(error) {
-            console.error('Error occurred.');
-            res.status(500).json({ message: 'Error occurred.' });
+        } else {
+            if (!mongoose.Types.ObjectId.isValid(req.params.id)){
+                return res.status(400).json({ message: 'Invalid employee id.' });
+            };
+
+            const existingRename = await Employee.findOne({
+                name: { $regex: new RegExp(`^${nameTrim}$`, 'i') },
+                _id: { $ne: req.params.id }
+            });
+
+            if (existingRename) return res.status(409).json({ message: `${nameTrim} already exists.` });
         };
+
+        req.validatedEmployeeBody = {
+            name: nameTrim,
+            position: positionTrim,
+            department: departmentTrim
+        };
+        next();
+        
+    } catch(error) {
+        console.error('Error in validate employee data.');
+        next(error);
+        // res.status(500).json({ message: 'Error in validate employee data.' });
     };
 };

@@ -5,13 +5,13 @@ import { validateRideData } from '../middlewares/validateRideData.js';
 
 const router = express.Router();
 
-router.post('/rides', validateRideData(false), createRide);
+router.post('/rides', validateRideData, createRide);
 
 router.get('/rides', getAllRides);
 
 router.get('/rides/:id', findRideId, getSingleRide);
 
-router.put('/rides/:id', findRideId, validateRideData(true), updateRide);
+router.put('/rides/:id', findRideId, validateRideData, updateRide);
 
 router.delete('/rides/:id',findRideId, deleteRide);
 

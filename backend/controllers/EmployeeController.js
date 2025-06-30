@@ -1,57 +1,67 @@
-import { Employee, employees } from '../models/Employee.js';
+import { Employee } from '../models/Employee.js';
 
 export const createEmployee = async (req, res) =>{
     try {
-        const newId = employees.length > 0 ? Math.max(...employees.map(e => e.id)) + 1 : 1;
-        const newEmployee = new Employee(newId, req.validatedEmployeeBody);
+        const newEmployee = await Employee.create(req.validatedEmployeeBody);
 
-        employees.push(newEmployee);
-        res.status(201).json({ message: `Employee ${newEmployee.name} added.` });
+        res.status(201).json({
+            message: `Employee ${newEmployee.name} added.`,
+            employee: newEmployee
+        });
     } catch(error) {
-        console.error('Error occured.');
+        console.error('Error adding employee.');
         res.status(500).json({ error: 'Couldnt add employee.' });
     };
 };
 
 export const getAllEmployees = async (req, res) => {
     try {
+        const employees = await Employee.find();
         res.status(200).json(employees);
     } catch(error) {
-        console.error('Error fetching employees.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error fetching all employees.');
+        res.status(500).json({ message: 'Error fetching all employees.' });
     };
 };
 
-export const getSingleEmployee = async (req, res) => {
+export const getSingleEmployee = (req, res) => {
     try {
         res.status(200).json(req.employee);
     } catch(error) {
-        console.error('Error fetching the employee.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving the employee.');
+        res.status(500).json({ message: 'Error retrieving the employee.' });
     };
 };
 
-export const updateEmployee = async (req, res) => {
+export const updateEmployee = async (req, res, next) => {
     try {
-        const employeeIndex = employees.findIndex(e => e.id === req.employee.id);
+        const updatedEmployee = await Employee.findByIdAndUpdate(
+            req.params.id,
+            req.validatedEmployeeBody,
+            {
+                new: true,
+                runValidators: true,
+                overwrite: true
+            }
+        );
 
-        employees[employeeIndex] = new Employee(req.employee.id, req.validatedEmployeeBody);
-        res.status(200).json(employees[employeeIndex]);
+        console.log('Employee updated.');
+        res.status(200).json(updatedEmployee);
     } catch(error) {
         console.error('Error updating employee.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error updating employee.' });
     };
 };
 
-export const deleteEmployee = async (req, res) =>{
+export const deleteEmployee = async (req, res, next) =>{
     try {
-        const employeeIndex = employees.findIndex(e => e.id === req.employee.id);
-    
-        employees.splice(employeeIndex, 1);
+        const employeeToDelete = await Employee.findByIdAndDelete(req.params.id);
         res.status(204).send();
         console.log('Employee deleted.');
     } catch(error) {
         console.error('Error deleting employee.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error deleting employee.' });
     };
 };

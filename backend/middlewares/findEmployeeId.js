@@ -1,9 +1,15 @@
-import { employees } from '../models/Employee.js';
+import mongoose from 'mongoose';
+import { Employee } from '../models/Employee.js';
 
-export const findEmployeeId = (req, res, next) =>{
+export const findEmployeeId = async (req, res, next) =>{
     try {
-        const employeeId = parseInt(req.params.id);
-        const employee = employees.find(e => e.id === employeeId);
+        const employeeId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(employeeId)){
+            return res.status(400).json({ message: 'Invalid employee id format.' });
+        };
+
+        const employee = await Employee.findById(employeeId);
     
         if (!employee) return res.status(404).json({ message: `${employeeId} not found.` });
     
