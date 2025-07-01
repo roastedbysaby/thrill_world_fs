@@ -19,7 +19,3 @@ const employeeSchema = new mongoose.Schema(
 );
 
 export const Employee = mongoose.model('Employee', employeeSchema);
-
-export const employees = [
-    
-];

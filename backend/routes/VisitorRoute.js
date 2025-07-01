@@ -5,13 +5,13 @@ import { validateVisitorData } from '../middlewares/validateVisitorData.js';
 
 const router = express.Router();
 
-router.post('/visitors', validateVisitorData(false), createVisitor);
+router.post('/visitors', validateVisitorData, createVisitor);
 
 router.get('/visitors', getAllVisitors);
 
 router.get('/visitors/:id', findVisitorId, getSingleVisitor);
 
-router.put('/visitors/:id', findVisitorId, validateVisitorData(true), updateVisitor);
+router.put('/visitors/:id', findVisitorId, validateVisitorData, updateVisitor);
 
 router.delete('/visitors/:id', findVisitorId, deleteVisitor);
 

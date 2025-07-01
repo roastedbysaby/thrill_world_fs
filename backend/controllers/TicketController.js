@@ -1,59 +1,73 @@
-import { Ticket, tickets } from '../models/Ticket.js';
+import { Ticket } from '../models/Ticket.js';
 
 export const createTicket = async (req, res) =>{
     try{   
-        const newId = tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1;
-        const { visitorId, ...ticketData } = req.validatedTicketBody;
-        const ticket = new Ticket(newId, visitorId, ticketData );
+        const newTicket = await Ticket.create(req.validatedTicketBody);
+        
+        res.status(201).json({
+            message: `Ticket ${newTicket.id} added to visitor ${req.validatedTicketBody.visitorId}.`,
+            ticket: newTicket
+        });
+        console.log('Ticket added.');
 
-        tickets.push(ticket);
-        res.status(201).json({ message: `Ticket ${ticket.id} added to visitor ${visitorId}.` });
     } catch(error) {
-        console.error('Error creating ticket.');
-        res.status(500).json({ message: 'Couldnt add ticket.' });
+        console.error('Error adding ticket.');
+        res.status(500).json({ message: 'Error adding ticket.' });
     };
 };
 
 export const getAllTickets = async (req, res) =>{
     try {
+        const tickets = await Ticket.find();
         res.status(200).json(tickets);
+
     } catch(error) {
-        console.error('Error fetching tickets.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving all tickets.');
+        res.status(500).json({ message: 'Error retrieving all tickets.' });
     };
 };
 
-export const getSingleTicket = async (req, res) =>{
+export const getSingleTicket = (req, res) =>{
     try {
         res.status(200).json(req.ticket);
+
     } catch(error) {
-        console.error('Error fetching the ticket.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving the ticket.');
+        res.status(500).json({ message: 'Error retrieving the ticket.' });
     };
 };
 
-export const updateTicket = async (req, res) =>{
+export const updateTicket = async (req, res, next) =>{
     try {
-        const ticketIndex = tickets.findIndex(t => t.id === req.ticket.id);
-        const { visitorId, ...ticketData } = req.validatedTicketBody;
+        const updatedTicket = await Ticket.findByIdAndUpdate(
+            req.params.id,
+            req.validatedTicketBody,
+            {
+                new: true,
+                runValidators: true,
+                overwrite: true
+            }
+        );
 
-        tickets[ticketIndex] = new Ticket(req.ticket.id, visitorId, ticketData);
-        res.status(200).json(tickets[ticketIndex]);
+        res.status(200).json(updatedTicket);
+        console.log('Ticket updated.');
+
     } catch(error) {
         console.error('Error updating ticket.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error updating ticket.' });
     };
 };
 
-export const deleteTicket = async (req, res) =>{
+export const deleteTicket = async (req, res, next) =>{
     try {
-        const ticketIndex = tickets.findIndex(t => t.id === req.ticket.id);
-    
-        tickets.splice(ticketIndex, 1);
+        const ticketToDelete = await Ticket.findByIdAndDelete(req.params.id);
+
         res.status(204).send();
         console.log('Ticket deleted.');
     } catch(error) {
         console.error('Error deleting ticket.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error deleting ticket.' });
     };
 };

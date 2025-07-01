@@ -1,59 +1,73 @@
-import { Maintenance, maintenances } from '../models/Maintenance.js';
+import { Maintenance } from '../models/Maintenance.js';
 
 export const createMaintenance = async (req, res) =>{
     try {
-        const { rideId, employeeId, ...maintenanceData } = req.validatedMaintenanceBody;
-        const newId = maintenances.length > 0 ? Math.max(...maintenances.map(m => m.id)) + 1 : 1;
-        const newMaintenance = new Maintenance(newId, rideId, employeeId, maintenanceData);
+        const newMaintenance = await Maintenance.create(req.validatedMaintenanceBody);
 
-        maintenances.push(newMaintenance);
-        res.status(201).json({ message: `Maintenance ${newMaintenance.description} added.` });
+        res.status(201).json({
+            message: `Maintenance ${newMaintenance.description} added.`,
+            maintenance: newMaintenance
+        });
+        console.log('Maintenance added.');
+
     } catch(error) {
-        console.error('Error creating maintenance.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error adding maintenance.');
+        res.status(500).json({ message: 'Error adding maintenace.' });
     };
 };
 
 export const getAllMaintenances = async (req, res) =>{
     try {
+        const maintenances = await Maintenance.find();
         res.status(200).json(maintenances);
+
     } catch(error) {
-        console.error('Error fetching maintenances.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving all maintenances.');
+        res.status(500).json({ message: 'Error retrieving all maintenaces.' });
     };
 };
 
-export const getSingleMaintenance = async (req, res) =>{
+export const getSingleMaintenance = (req, res) =>{
     try {
         res.status(200).json(req.maintenance);
+
     } catch(error) {
-        console.error('Error fetching the maintenance.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error retrieving the maintenance.');
+        res.status(500).json({ message: 'Error retrieving the maintenance.' });
     };
 };
 
-export const updateMaintenance = async (req, res) =>{
+export const updateMaintenance = async (req, res, next) =>{
     try {
-        const { rideId, employeeId, ...updateData } = req.validatedMaintenanceBody;
-        const maintenanceIndex = maintenances.findIndex(m => m.id === req.maintenance.id);
+        const updatedMaintenance = await Maintenance.findByIdAndUpdate(
+            req.params.id,
+            req.validatedMaintenanceBody,
+            {
+                new: true,
+                runValidators: true,
+                overwrite: true
+            }
+        );
     
-        maintenances[maintenanceIndex] = new Maintenance(req.maintenance.id, rideId, employeeId, updateData);
-        res.status(200).json(maintenances[maintenanceIndex]);
+        res.status(200).json(updatedMaintenance);
+        console.log('Maintenance updated');
+
     } catch(error) {
         console.error('Error updating maintenance.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error updating maintenace.' });
     };
 };
 
-export const deleteMaintenance = async (req, res) =>{
+export const deleteMaintenance = async (req, res, next) =>{
     try {
-        const maintenanceIndex = maintenances.findIndex(m => m.id === req.maintenance.id);
-    
-        maintenances.splice(maintenanceIndex, 1);
+        const maintenanceToDelete = await Maintenance.findByIdAndDelete(req.params.id);
         res.status(204).send();
         console.log('Maintenance deleted.');
+
     } catch(error) {
         console.error('Error deleting maintenance.');
-        res.status(500).json({ message: 'Error occurred.' });
+        next(error);
+        // res.status(500).json({ message: 'Error deleting maintenance.' });
     };
 };

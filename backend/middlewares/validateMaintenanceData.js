@@ -1,31 +1,28 @@
-import { rides } from '../models/Ride.js';
-import { employees } from '../models/Employee.js';
+import mongoose from 'mongoose';
+import { Ride } from '../models/Ride.js';
+import { Employee } from '../models/Employee.js';
 import { validateDate } from '../utils/validateDate.js';
 
-export const validateMaintenanceData = (req, res, next) =>{
+export const validateMaintenanceData = async (req, res, next) =>{
     try{
-        const { rideId: stringRideId, employeeId: stringEmployeeId, date: stringDate, description, status } = req.body;
+        const { rideId, employeeId, date: stringDate, description, status } = req.body;
         const descriptionTrim = description? description.trim() : '';
         const statusTrim = status? status.trim() : '';
 
-        if (!stringRideId ||
-            !stringEmployeeId ||
+        if (!rideId ||
+            !employeeId ||
             !stringDate ||
             !descriptionTrim ||
             !statusTrim){
                 return res.status(400).json({ message: 'Invalid fields.' });
             };
 
-        const rideId = parseInt(stringRideId);
-        if (isNaN(rideId)) return res.status(400).json({ message: 'Invalid ride id.' });
-
-        const ride = rides.find(r => r.id === rideId);
+        if (!mongoose.Types.ObjectId.isValid(rideId)) return res.status(400).json({ message: 'Invalid ride id format.' });
+        const ride = await Ride.findById(rideId);
         if (!ride) return res.status(404).json({ message: `Ride id ${rideId} not found.` });
 
-        const employeeId = parseInt(stringEmployeeId);
-        if (isNaN(employeeId)) return res.status(400).json({ message: 'Invalid employee id.' });
-
-        const employee = employees.find(e => e.id === employeeId);
+        if (!mongoose.Types.ObjectId.isValid(employeeId)) return res.status(400).json({ message: 'Invalid employee id format.' });
+        const employee = await Employee.findById(employeeId);
         if (!employee) return res.status(404).json({ message: `Employee id ${employeeId} not found.` });
 
         const date = validateDate(stringDate);
@@ -41,7 +38,8 @@ export const validateMaintenanceData = (req, res, next) =>{
         next();
 
     } catch(error) {
-        console.error('Error occurred.');
-        res.status(500).json({ message: 'Error occurred.' });
+        console.error('Error occurred in validate maintenance data.');
+        next(error);
+        // res.status(500).json({ message: 'Error occurred in validate maintenance data.' });
     };
 };

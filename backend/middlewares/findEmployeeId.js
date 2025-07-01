@@ -5,9 +5,7 @@ export const findEmployeeId = async (req, res, next) =>{
     try {
         const employeeId = req.params.id;
 
-        if (!mongoose.Types.ObjectId.isValid(employeeId)){
-            return res.status(400).json({ message: 'Invalid employee id format.' });
-        };
+        if (!mongoose.Types.ObjectId.isValid(employeeId)) return res.status(400).json({ message: 'Invalid employee id format.' });
 
         const employee = await Employee.findById(employeeId);
     

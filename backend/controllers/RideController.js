@@ -8,6 +8,7 @@ export const createRide = async (req, res) =>{
             message: `Ride ${newRide.name} added.`,
             ride: newRide
         });
+        console.log('Ride added.');
     } catch(error) {
         console.error('Error adding ride.');
         res.status(500).json({ error: 'Couldnt add ride.' });

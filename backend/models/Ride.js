@@ -30,5 +30,3 @@ const rideSchema = new mongoose.Schema(
 );
 
 export const Ride = mongoose.model('Ride', rideSchema);
-
-export const rides = [];
