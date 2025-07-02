@@ -1,8 +1,9 @@
 import express from 'express';
-import { createEmployee, getAllEmployees, getSingleEmployee, updateEmployee, deleteEmployee } from '../controllers/EmployeeController.js';
+import { employeeController } from '../controllers/EmployeeController.js';
 import { findEmployeeId } from '../middlewares/findEmployeeId.js';
 import { validateEmployeeData } from '../middlewares/validateEmployeeData.js';
 
+const { createEmployee, getAllEmployees, getSingleEmployee, updateEmployee, deleteEmployee } = employeeController;
 const router = express.Router();
 
 router.post('/employees', validateEmployeeData, createEmployee);

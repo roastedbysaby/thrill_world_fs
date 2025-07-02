@@ -3,11 +3,11 @@ import mongoose from 'mongoose';
 const maintenanceSchema = new mongoose.Schema(
     {
         rideId: {
-            type: String,
-            required: true,
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
         },
         employeeId: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
             required: true
         },
         date: {
@@ -16,12 +16,17 @@ const maintenanceSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            required: true
+            required: true,
+            lowercase: true
         },
         status: {
             type: String,
-            required: true
+            required: true,
+            enum: ['pending approval', 'in-progress', 'completed']
         }
+    },
+    {
+        timestamps: true
     }
 );
 

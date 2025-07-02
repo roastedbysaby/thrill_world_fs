@@ -4,10 +4,10 @@ import { validateDate } from '../utils/validateDate.js';
 
 export const validateTicketData = async (req, res, next) =>{
     try {
-        const { visitorId: stringVisitorId, type, price: stringPrice, purchaseDate: stringPurchaseDate, validUntil: stringValidUntil } = req.body;
+        const { visitorId, type, price: stringPrice, purchaseDate: stringPurchaseDate, validUntil: stringValidUntil } = req.body;
         const typeTrim = type? type.trim() : '';
 
-        if (!stringVisitorId ||
+        if (!visitorId ||
             !typeTrim ||
             !stringPrice ||
             !stringPurchaseDate ||
@@ -15,9 +15,7 @@ export const validateTicketData = async (req, res, next) =>{
                 return res.status(400).json({ message: 'Invalid fields.' });
             };
 
-        const visitorId = stringVisitorId;
-
-        if (!mongoose.Types.ObjectId.isValid(visitorId)) return res.status(400).jason({ message: 'Invalid visitor id format.' });
+        if (!mongoose.Types.ObjectId.isValid(visitorId)) return res.status(400).json({ message: 'Invalid visitor id format.' });
         
         const visitor = await Visitor.findById(visitorId);
         if (!visitor) return res.status(404).json({ message: `Visitor id ${visitorId} not found.` });
@@ -30,6 +28,8 @@ export const validateTicketData = async (req, res, next) =>{
 
         const validUntil = validateDate(stringValidUntil);
         if (typeof validUntil === 'string') return res.status(400).json({ message: validUntil });
+
+        if (validUntil <= purchaseDate) return res.status(400).json({ message: 'Valid date must be after purchase date.' });
 
         req.validatedTicketBody = {
             visitorId,

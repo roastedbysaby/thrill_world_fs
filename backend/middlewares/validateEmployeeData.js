@@ -3,17 +3,28 @@ import { Employee } from '../models/Employee.js';
 
 export const validateEmployeeData = async (req, res, next) =>{
     try {
-        const { name, position, department } = req.body;
+        const { name, email, position, department } = req.body;
         const nameTrim = name? name.trim() : '';
+        const emailTrim = email? email.trim().toLowerCase() : '';
+        const emailRegex = /^[a-zA-Z0-9]+(?:[.-][a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\.(?=.{2,63}$)[a-zA-Z0-9](?:-[a-zA-Z0-9]+)*$/;
         const positionTrim = position? position.trim() : '';
         const departmentTrim = department? department.trim() : '';
         const isUpdate = req.method === 'PUT';
 
         if (!nameTrim ||
+            !emailTrim ||
             !positionTrim ||
             !departmentTrim){
                 return res.status(400).json({ message: 'Invalid fields.' });
             };
+            
+        if (!emailRegex.test(emailTrim)) return res.status(400).json({ message: 'Invalid email format.' });
+
+        const existingEmail = await Employee.findOne({
+            email: emailTrim,
+            _id: { $ne: req.params.id }
+        });
+        if (existingEmail) return res.status(400).json({ message: 'Email already in use.' });
 
         if (!isUpdate){
             const exists = await Employee.findOne({
@@ -37,6 +48,7 @@ export const validateEmployeeData = async (req, res, next) =>{
 
         req.validatedEmployeeBody = {
             name: nameTrim,
+            email: emailTrim,
             position: positionTrim,
             department: departmentTrim
         };

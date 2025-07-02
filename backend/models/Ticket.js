@@ -3,16 +3,21 @@ import mongoose from 'mongoose';
 const ticketSchema = new mongoose.Schema(
     {
         visitorId: {
-            type: String,
+            type: mongoose.Schema.Types.ObjectId,
             required: true
         },
         type: {
             type: String,
-            required: true
+            required: true,
+            lowercase: true,
+            trim: true,
+            enum: ['promo', 'daily', 'seasonal', 'yearly']
         },
         price: {
             type: Number,
-            required: true
+            required: true,
+            min: [0, 'Price must be positive.'],
+            max: [1000, 'Price must be lower or equal to 1000.']
         },
         purchaseDate: {
             type: Date,
@@ -22,6 +27,9 @@ const ticketSchema = new mongoose.Schema(
             type: Date,
             required: true
         }
+    },
+    {
+        timestamps: true
     }
 );
 
